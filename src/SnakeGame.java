@@ -16,6 +16,37 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener {
             this.y = y;
         }
     }
+
+    private class PauseButton {
+        int x, y, width, height;
+        String label = "PAUSE";
+
+        PauseButton(int x, int y, int width, int height){
+            this.x = x;
+            this.y = y;
+            this.width = width;
+            this.height = height;
+        }
+    
+    boolean isClicked(int mouseX, int mouseY){
+        return mouseX >= x && mouseX <= x + width && mouseY >= y && mouseY <= y + height;
+    }
+
+    void draw(Graphics g) {
+    Graphics2D g2d = (Graphics2D) g;
+    g2d.setColor(Color.GRAY);
+    g2d.fillRect(x, y, width, height);
+    g2d.setColor(Color.BLACK);
+    g2d.setStroke(new BasicStroke(2));
+    g2d.drawRect(x, y, width, height);
+    g2d.setColor(Color.BLACK);
+    g2d.setFont(new Font("arial", Font.BOLD, 14));
+    FontMetrics fm = g2d.getFontMetrics();
+    int textX = x + (width - fm.stringWidth(label)) / 2;
+    int textY = y + ((height - fm.getHeight()) / 2) + fm.getAscent();
+    g2d.drawString(label, textX, textY);
+}
+    }
     int boardWidth;
     int boardHeight;
     int tileSize = 25;
@@ -33,6 +64,8 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener {
     int velocityX;
     int velocityY;
     boolean gameOver = false;
+    boolean isPaused = false;
+    PauseButton pauseButton;
 
     SnakeGame(int boardWidth, int boardHeight) {
         this.boardWidth = boardWidth;
@@ -40,6 +73,14 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener {
         setPreferredSize(new Dimension(this.boardWidth, this.boardHeight));
         setBackground(Color.BLACK);
         addKeyListener(this);
+        addMouseListener(new MouseAdapter(){
+            @Override
+           public void mousePressed(MouseEvent e) {
+                if (pauseButton.isClicked(e.getX(), e.getY()) && !gameOver) {
+                    isPaused = !isPaused;
+                }
+            }
+        });
         setFocusable(true);
 
         snakeHead = new Tile(5,5);
@@ -51,6 +92,8 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener {
 
         velocityX = 0;
         velocityY = 0;
+
+        pauseButton = new PauseButton(boardWidth - 120, 10, 100, 30);
 
         gameLoop = new Timer(100, this);
         gameLoop.start();
@@ -94,6 +137,18 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener {
             g.drawString("Score: " + String.valueOf(snakeBody.size()), tileSize -16, tileSize);
 
         }
+    //boton de pausa
+    if (isPaused && !gameOver) {
+        g.setColor(new Color(0,0,0, 150));
+        g.fillRect(0,0, boardWidth, boardHeight);
+        g.setColor(Color.WHITE);
+        g.setFont(new Font("arial", Font.BOLD, 40));
+        String pauseText = "PAUSA";
+        FontMetrics fm = g.getFontMetrics();
+        int x = (boardWidth - fm.stringWidth(pauseText)) / 2;
+        int y = (boardHeight - fm.getHeight()) / 2 + fm.getAscent();
+        g.drawString(pauseText, x, y);
+    }
     }
     public void placeFood() {
         food.x = random.nextInt(boardWidth / tileSize);
@@ -153,6 +208,27 @@ public void move() {
 
    @Override
     public void keyPressed(KeyEvent e) {
+        if (e.getKeyCode() == KeyEvent.VK_SPACE){
+            isPaused = !isPaused;
+        }
+        else if (!isPaused && !gameOver){
+            if (e.getKeyCode() == KeyEvent.VK_UP && velocityY != 1){
+                velocityX = 0;
+                velocityY = -1;
+            }
+             else if (e.getKeyCode() == KeyEvent.VK_DOWN && velocityY != -1){
+                velocityX = 0;
+                velocityY = 1;
+            }
+            else if (e.getKeyCode() == KeyEvent.VK_LEFT && velocityX != 1){
+                velocityX = -1;
+                velocityY = 0;
+            }
+            else if (e.getKeyCode() == KeyEvent.VK_RIGHT && velocityX != -1){
+                velocityX = 1;
+                velocityY = 0;
+            }
+        }
         if (e.getKeyCode() == KeyEvent.VK_UP && velocityY != 1){
             velocityX = 0;
             velocityY = -1;
